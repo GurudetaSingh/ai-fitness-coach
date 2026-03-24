@@ -2,6 +2,8 @@
 
 IronMind is a modern fitness tracking web app that enables users to log workouts, visualize progress, and receive **real-time AI-powered coaching insights** based on their training data.
 
+👉 Live Demo: https://ironmindai.netlify.app
+
 ---
 
 ## 🚀 Features
