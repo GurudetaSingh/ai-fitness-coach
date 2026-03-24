@@ -83,7 +83,7 @@ export default function Index() {
                 <Brain className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">AI Coach</h2>
               </div>
-              <AICoach insights={insights} />
+              <AICoach insights={insights} workouts={workouts} />
             </section>
           </div>
         </div>

@@ -9,12 +9,17 @@ interface Props {
   onAdd: (entry: { date: string; exercise: string; weight: number; reps: number; sets: number }) => void;
 }
 
+function getLocalDate() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export default function WorkoutForm({ onAdd }: Props) {
   const [exercise, setExercise] = useState("");
   const [weight, setWeight] = useState("");
   const [reps, setReps] = useState("");
   const [sets, setSets] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(getLocalDate);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const filtered = COMMON_EXERCISES.filter((e) =>
@@ -34,6 +39,7 @@ export default function WorkoutForm({ onAdd }: Props) {
     setWeight("");
     setReps("");
     setSets("");
+    setDate(getLocalDate());
   };
 
   return (

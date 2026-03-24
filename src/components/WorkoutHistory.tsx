@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function WorkoutHistory({ workouts, onDelete }: Props) {
-  const sorted = [...workouts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const sorted = [...workouts].sort((a, b) => b.date.localeCompare(a.date));
   const recent = sorted.slice(0, 10);
 
   if (recent.length === 0) {
@@ -29,7 +29,10 @@ export default function WorkoutHistory({ workouts, onDelete }: Props) {
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm truncate">{w.exercise}</span>
               <span className="text-xs text-muted-foreground">
-                {new Date(w.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {(() => {
+                  const [y, m, d] = w.date.split("-").map(Number);
+                  return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                })()}
               </span>
             </div>
             <div className="flex gap-3 mt-1 text-xs text-muted-foreground font-mono">
