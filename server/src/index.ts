@@ -16,15 +16,14 @@ if (!GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+const isDev = !process.env.ALLOWED_ORIGIN || process.env.ALLOWED_ORIGIN.includes("localhost");
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origin.startsWith("http://localhost")) {
-      callback(null, true);
-    } else if (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    if (!origin) return callback(null, true);
+    if (isDev && origin.startsWith("http://localhost")) return callback(null, true);
+    if (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) return callback(null, true);
+    callback(new Error("Not allowed by CORS"));
   }
 }));
 app.use(express.json());
