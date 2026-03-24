@@ -20,7 +20,7 @@ app.use(cors({
   origin: (origin, callback) => {
     if (!origin || origin.startsWith("http://localhost")) {
       callback(null, true);
-    } else if (origin === ALLOWED_ORIGIN) {
+    } else if (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
@@ -28,6 +28,10 @@ app.use(cors({
   }
 }));
 app.use(express.json());
+
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
 
 const SYSTEM_PROMPT = `You are IronMind, an expert AI fitness coach. You analyze workout data and provide actionable, personalized coaching advice.
 

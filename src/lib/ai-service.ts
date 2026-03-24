@@ -5,9 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
 function buildWorkoutSummary(workouts: WorkoutEntry[]): string {
   if (workouts.length === 0) return "No workouts logged yet.";
 
-  const sorted = [...workouts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sorted = [...workouts].sort((a, b) => b.date.localeCompare(a.date));
   const recent = sorted.slice(0, 50);
 
   const lines = recent.map(
