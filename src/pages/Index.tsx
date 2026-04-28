@@ -1,11 +1,12 @@
 import { useState, useCallback, useMemo } from "react";
-import { Flame, Brain } from "lucide-react";
+import { Flame, Brain, Trophy } from "lucide-react";
 import WorkoutForm from "@/components/WorkoutForm";
 import ProgressChart from "@/components/ProgressChart";
 import AICoach from "@/components/AICoach";
 import WorkoutHistory from "@/components/WorkoutHistory";
 import StatsBar from "@/components/StatsBar";
 import BodyWeightTracker from "@/components/BodyWeightTracker";
+import PersonalRecords from "@/components/PersonalRecords";
 import {
   getWorkouts,
   addWorkout,
@@ -104,6 +105,14 @@ export default function Index() {
             </section>
 
             <section className="bg-card border border-border rounded-xl p-5 opacity-0 animate-fade-up" style={{ animationDelay: "420ms" }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Personal Records</h2>
+              </div>
+              <PersonalRecords workouts={workouts} />
+            </section>
+
+            <section className="bg-card border border-border rounded-xl p-5 opacity-0 animate-fade-up" style={{ animationDelay: "490ms" }}>
               <div className="flex items-center gap-2 mb-4">
                 <Brain className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">AI Coach</h2>
