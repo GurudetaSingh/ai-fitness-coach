@@ -38,6 +38,14 @@ export function addWorkout(entry: Omit<WorkoutEntry, "id">): WorkoutEntry | null
   return newEntry;
 }
 
+export function updateWorkout(id: string, updates: Omit<WorkoutEntry, "id">): WorkoutEntry {
+  const workouts = getWorkouts();
+  const idx = workouts.findIndex((w) => w.id === id);
+  workouts[idx] = { id, ...updates };
+  localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
+  return workouts[idx];
+}
+
 export function deleteWorkout(id: string) {
   const workouts = getWorkouts().filter((w) => w.id !== id);
   localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
@@ -60,6 +68,14 @@ export function addBodyWeight(entry: Omit<BodyWeight, "id">): BodyWeight {
   weights.push(newEntry);
   localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
   return newEntry;
+}
+
+export function updateBodyWeight(id: string, weight: number): BodyWeight {
+  const weights = getBodyWeights();
+  const entry = weights.find((w) => w.id === id)!;
+  entry.weight = weight;
+  localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
+  return entry;
 }
 
 export function deleteBodyWeight(id: string) {

@@ -14,7 +14,9 @@ import {
   generateInsights,
   getBodyWeights,
   addBodyWeight,
+  updateBodyWeight,
   deleteBodyWeight,
+  updateWorkout,
   type WorkoutEntry,
   type BodyWeight,
 } from "@/lib/fitness-store";
@@ -31,6 +33,11 @@ export default function Index() {
     []
   );
 
+  const handleUpdate = useCallback((id: string, updates: Omit<WorkoutEntry, "id">) => {
+    const updated = updateWorkout(id, updates);
+    setWorkouts((prev) => prev.map((w) => w.id === id ? updated : w));
+  }, []);
+
   const handleDelete = useCallback((id: string) => {
     deleteWorkout(id);
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
@@ -43,6 +50,11 @@ export default function Index() {
       if (existing) return prev.map((w) => w.id === result.id ? result : w);
       return [...prev, result];
     });
+  }, []);
+
+  const handleUpdateBodyWeight = useCallback((id: string, weight: number) => {
+    const updated = updateBodyWeight(id, weight);
+    setBodyWeights((prev) => prev.map((w) => w.id === id ? updated : w));
   }, []);
 
   const handleDeleteBodyWeight = useCallback((id: string) => {
@@ -88,12 +100,12 @@ export default function Index() {
 
             <section className="bg-card border border-border rounded-xl p-5 opacity-0 animate-fade-up" style={{ animationDelay: "280ms" }}>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Recent Activity</h2>
-              <WorkoutHistory workouts={workouts} onDelete={handleDelete} />
+              <WorkoutHistory workouts={workouts} onUpdate={handleUpdate} onDelete={handleDelete} />
             </section>
 
             <section className="bg-card border border-border rounded-xl p-5 opacity-0 animate-fade-up" style={{ animationDelay: "340ms" }}>
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Body Weight</h2>
-              <BodyWeightTracker entries={bodyWeights} onAdd={handleAddBodyWeight} onDelete={handleDeleteBodyWeight} />
+              <BodyWeightTracker entries={bodyWeights} onAdd={handleAddBodyWeight} onUpdate={handleUpdateBodyWeight} onDelete={handleDeleteBodyWeight} />
             </section>
           </div>
 
