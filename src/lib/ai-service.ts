@@ -1,6 +1,7 @@
 import type { WorkoutEntry, BodyWeight } from "./fitness-store";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
+const API_SECRET = import.meta.env.VITE_API_SECRET ?? "";
 
 function buildContext(workouts: WorkoutEntry[], bodyWeights: BodyWeight[]): string {
   const parts: string[] = [];
@@ -47,7 +48,7 @@ export async function generateAIInsights(
 ): Promise<string[]> {
   const res = await fetch(`${API_URL}/api/insights`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": API_SECRET },
     body: JSON.stringify({ workouts: buildContext(workouts, bodyWeights) }),
   });
 
@@ -71,7 +72,7 @@ export async function chatWithCoach(
 ): Promise<string> {
   const res = await fetch(`${API_URL}/api/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-api-key": API_SECRET },
     body: JSON.stringify({
       workouts: buildContext(workouts, bodyWeights),
       messages,

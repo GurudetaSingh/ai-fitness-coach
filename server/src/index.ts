@@ -8,9 +8,14 @@ const app = express();
 const PORT = parseInt(process.env.PORT ?? "8787", 10);
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN ?? "http://localhost:5173";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const API_SECRET = process.env.API_SECRET;
 
 if (!GEMINI_API_KEY) {
   console.error("GEMINI_API_KEY is required. Add it to server/.env");
+  process.exit(1);
+}
+if (!API_SECRET) {
+  console.error("API_SECRET is required. Add it to server/.env");
   process.exit(1);
 }
 
@@ -36,6 +41,13 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use("/api", apiLimiter);
+app.use("/api", (req, res, next) => {
+  if (req.headers["x-api-key"] !== API_SECRET) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+});
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
@@ -72,9 +84,8 @@ Provide personalized coaching insights:`;
       .filter((line) => line.length > 0);
 
     res.json({ insights });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal error";
-    res.status(500).json({ error: message });
+  } catch {
+    res.status(500).json({ error: "Failed to generate insights" });
   }
 });
 
@@ -103,9 +114,8 @@ Respond as the coach. Be concise (2-4 sentences). Reference their actual data wh
     const reply = result.response.text();
 
     res.json({ reply });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal error";
-    res.status(500).json({ error: message });
+  } catch {
+    res.status(500).json({ error: "Failed to generate response" });
   }
 });
 
