@@ -23,23 +23,17 @@ interface Props {
 }
 
 function getIcon(insight: string) {
-  if (insight.includes("📊") || insight.includes("plateaued"))
+  if (insight.includes("plateaued"))
     return <TrendingUp className="w-4 h-4 text-accent shrink-0 mt-0.5" />;
-  if (insight.includes("⚠️") || insight.includes("dropped"))
-    return (
-      <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-    );
-  if (insight.includes("🔥") || insight.includes("progress"))
+  if (insight.includes("dropped"))
+    return <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />;
+  if (insight.includes("progress"))
     return <Flame className="w-4 h-4 text-primary shrink-0 mt-0.5" />;
-  if (insight.includes("🔄") || insight.includes("variety"))
+  if (insight.includes("variety"))
     return <RotateCcw className="w-4 h-4 text-accent shrink-0 mt-0.5" />;
-  if (insight.includes("🛌") || insight.includes("rest"))
+  if (insight.includes("rest") || insight.includes("recover"))
     return <Bed className="w-4 h-4 text-success shrink-0 mt-0.5" />;
   return <Brain className="w-4 h-4 text-primary shrink-0 mt-0.5" />;
-}
-
-function cleanEmoji(text: string) {
-  return text.replace(/^[📊⚠️🔥🔄🛌💪🎯]\s*/, "");
 }
 
 export default function AICoach({ insights, workouts }: Props) {
@@ -140,7 +134,7 @@ export default function AICoach({ insights, workouts }: Props) {
             style={{ animationDelay: `${i * 80}ms` }}
           >
             {getIcon(insight)}
-            <p className="text-sm leading-relaxed">{cleanEmoji(insight)}</p>
+            <p className="text-sm leading-relaxed">{insight}</p>
           </div>
         ))}
       </div>
