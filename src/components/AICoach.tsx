@@ -15,11 +15,12 @@ import {
   chatWithCoach,
   type ChatMessage,
 } from "@/lib/ai-service";
-import type { WorkoutEntry } from "@/lib/fitness-store";
+import type { WorkoutEntry, BodyWeight } from "@/lib/fitness-store";
 
 interface Props {
   insights: string[];
   workouts: WorkoutEntry[];
+  bodyWeights: BodyWeight[];
 }
 
 function getIcon(insight: string) {
@@ -36,7 +37,7 @@ function getIcon(insight: string) {
   return <Brain className="w-4 h-4 text-primary shrink-0 mt-0.5" />;
 }
 
-export default function AICoach({ insights, workouts }: Props) {
+export default function AICoach({ insights, workouts, bodyWeights }: Props) {
   const [aiInsights, setAiInsights] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export default function AICoach({ insights, workouts }: Props) {
     setLoading(true);
     setError(null);
 
-    generateAIInsights(workouts)
+    generateAIInsights(workouts, bodyWeights)
       .then((result) => {
         if (!cancelled) setAiInsights(result);
       })
@@ -83,7 +84,7 @@ export default function AICoach({ insights, workouts }: Props) {
     setChatLoading(true);
 
     try {
-      const reply = await chatWithCoach(workouts, newMessages);
+      const reply = await chatWithCoach(workouts, bodyWeights, newMessages);
       setMessages([...newMessages, { role: "assistant", content: reply }]);
     } catch {
       setMessages([

@@ -5,16 +5,22 @@ import ProgressChart from "@/components/ProgressChart";
 import AICoach from "@/components/AICoach";
 import WorkoutHistory from "@/components/WorkoutHistory";
 import StatsBar from "@/components/StatsBar";
+import BodyWeightTracker from "@/components/BodyWeightTracker";
 import {
   getWorkouts,
   addWorkout,
   deleteWorkout,
   generateInsights,
+  getBodyWeights,
+  addBodyWeight,
+  deleteBodyWeight,
   type WorkoutEntry,
+  type BodyWeight,
 } from "@/lib/fitness-store";
 
 export default function Index() {
   const [workouts, setWorkouts] = useState<WorkoutEntry[]>(getWorkouts);
+  const [bodyWeights, setBodyWeights] = useState<BodyWeight[]>(getBodyWeights);
 
   const handleAdd = useCallback(
     (entry: Omit<WorkoutEntry, "id">) => {
@@ -27,6 +33,16 @@ export default function Index() {
   const handleDelete = useCallback((id: string) => {
     deleteWorkout(id);
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
+  }, []);
+
+  const handleAddBodyWeight = useCallback((entry: { date: string; weight: number }) => {
+    const newEntry = addBodyWeight(entry);
+    setBodyWeights((prev) => [...prev, newEntry]);
+  }, []);
+
+  const handleDeleteBodyWeight = useCallback((id: string) => {
+    deleteBodyWeight(id);
+    setBodyWeights((prev) => prev.filter((w) => w.id !== id));
   }, []);
 
   const insights = useMemo(() => generateInsights(workouts), [workouts]);
@@ -69,6 +85,11 @@ export default function Index() {
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Recent Activity</h2>
               <WorkoutHistory workouts={workouts} onDelete={handleDelete} />
             </section>
+
+            <section className="bg-card border border-border rounded-xl p-5 opacity-0 animate-fade-up" style={{ animationDelay: "340ms" }}>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Body Weight</h2>
+              <BodyWeightTracker entries={bodyWeights} onAdd={handleAddBodyWeight} onDelete={handleDeleteBodyWeight} />
+            </section>
           </div>
 
           {/* Right: Charts + AI Coach */}
@@ -83,7 +104,7 @@ export default function Index() {
                 <Brain className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">AI Coach</h2>
               </div>
-              <AICoach insights={insights} workouts={workouts} />
+              <AICoach insights={insights} workouts={workouts} bodyWeights={bodyWeights} />
             </section>
           </div>
         </div>

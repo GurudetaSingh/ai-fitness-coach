@@ -8,6 +8,7 @@ export interface WorkoutEntry {
 }
 
 export interface BodyWeight {
+  id: string;
   date: string;
   weight: number;
 }
@@ -38,9 +39,16 @@ export function getBodyWeights(): BodyWeight[] {
   return raw ? JSON.parse(raw) : [];
 }
 
-export function addBodyWeight(entry: BodyWeight) {
+export function addBodyWeight(entry: Omit<BodyWeight, "id">): BodyWeight {
   const weights = getBodyWeights();
-  weights.push(entry);
+  const newEntry = { ...entry, id: crypto.randomUUID() };
+  weights.push(newEntry);
+  localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
+  return newEntry;
+}
+
+export function deleteBodyWeight(id: string) {
+  const weights = getBodyWeights().filter((w) => w.id !== id);
   localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
 }
 

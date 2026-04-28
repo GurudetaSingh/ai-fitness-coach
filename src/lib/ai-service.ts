@@ -1,38 +1,54 @@
-import type { WorkoutEntry } from "./fitness-store";
+import type { WorkoutEntry, BodyWeight } from "./fitness-store";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8787";
 
-function buildWorkoutSummary(workouts: WorkoutEntry[]): string {
-  if (workouts.length === 0) return "No workouts logged yet.";
+function buildContext(workouts: WorkoutEntry[], bodyWeights: BodyWeight[]): string {
+  const parts: string[] = [];
 
-  const sorted = [...workouts].sort((a, b) => b.date.localeCompare(a.date));
-  const recent = sorted.slice(0, 50);
+  if (workouts.length > 0) {
+    const sorted = [...workouts].sort((a, b) => b.date.localeCompare(a.date));
+    const recent = sorted.slice(0, 50);
+    const uniqueExercises = [...new Set(workouts.map((w) => w.exercise))];
+    const totalSessions = new Set(workouts.map((w) => w.date)).size;
 
-  const lines = recent.map(
-    (w) =>
-      `${w.date}: ${w.exercise} — ${w.weight}lbs × ${w.reps} reps × ${w.sets} sets`
-  );
+    parts.push(
+      `Total workouts logged: ${workouts.length}`,
+      `Unique exercises: ${uniqueExercises.join(", ")}`,
+      `Training days: ${totalSessions}`,
+      "",
+      "Recent workouts (newest first):",
+      ...recent.map((w) => `${w.date}: ${w.exercise} — ${w.weight}lbs × ${w.reps} reps × ${w.sets} sets`)
+    );
+  } else {
+    parts.push("No workouts logged yet.");
+  }
 
-  const uniqueExercises = [...new Set(workouts.map((w) => w.exercise))];
-  const totalSessions = new Set(workouts.map((w) => w.date)).size;
+  if (bodyWeights.length > 0) {
+    const sorted = [...bodyWeights].sort((a, b) => a.date.localeCompare(b.date));
+    const latest = sorted[sorted.length - 1];
+    const oldest = sorted[0];
+    const change = latest.weight - oldest.weight;
 
-  return [
-    `Total workouts logged: ${workouts.length}`,
-    `Unique exercises: ${uniqueExercises.join(", ")}`,
-    `Training days: ${totalSessions}`,
-    "",
-    "Recent workouts (newest first):",
-    ...lines,
-  ].join("\n");
+    parts.push(
+      "",
+      "Body weight history:",
+      ...sorted.slice(-20).map((e) => `${e.date}: ${e.weight}lbs`),
+      `Current weight: ${latest.weight}lbs`,
+      `Change over tracking period: ${change >= 0 ? "+" : ""}${change.toFixed(1)}lbs`
+    );
+  }
+
+  return parts.join("\n");
 }
 
 export async function generateAIInsights(
-  workouts: WorkoutEntry[]
+  workouts: WorkoutEntry[],
+  bodyWeights: BodyWeight[]
 ): Promise<string[]> {
   const res = await fetch(`${API_URL}/api/insights`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ workouts: buildWorkoutSummary(workouts) }),
+    body: JSON.stringify({ workouts: buildContext(workouts, bodyWeights) }),
   });
 
   if (!res.ok) {
@@ -50,13 +66,14 @@ export interface ChatMessage {
 
 export async function chatWithCoach(
   workouts: WorkoutEntry[],
+  bodyWeights: BodyWeight[],
   messages: ChatMessage[]
 ): Promise<string> {
   const res = await fetch(`${API_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      workouts: buildWorkoutSummary(workouts),
+      workouts: buildContext(workouts, bodyWeights),
       messages,
     }),
   });
