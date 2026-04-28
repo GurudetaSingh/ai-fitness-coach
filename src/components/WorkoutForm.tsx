@@ -28,11 +28,11 @@ export default function WorkoutForm({ onAdd }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!exercise || !weight || !reps || !sets) return;
+    if (!exercise || !reps || !sets) return;
     onAdd({
       date,
       exercise: exercise.trim(),
-      weight: parseFloat(weight),
+      weight: weight ? parseFloat(weight) : 0,
       reps: parseInt(reps),
       sets: parseInt(sets),
     });
@@ -72,8 +72,8 @@ export default function WorkoutForm({ onAdd }: Props) {
         </div>
 
         <div>
-          <Label className="text-muted-foreground text-xs uppercase tracking-wider mb-1.5 block">Weight (lbs)</Label>
-          <Input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="135" className="bg-background border-border" />
+          <Label className="text-muted-foreground text-xs uppercase tracking-wider mb-1.5 block">Weight (lbs) — blank for bodyweight</Label>
+          <Input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="0" className="bg-background border-border" />
         </div>
         <div>
           <Label className="text-muted-foreground text-xs uppercase tracking-wider mb-1.5 block">Date</Label>

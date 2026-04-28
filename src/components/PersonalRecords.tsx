@@ -33,7 +33,7 @@ function computePRs(workouts: WorkoutEntry[]): PR[] {
       date: w.date,
       isRecent: new Date(w.date) >= sevenDaysAgo,
     }))
-    .sort((a, b) => b.weight - a.weight);
+    .sort((a, b) => b.weight - a.weight || b.reps - a.reps);
 }
 
 function formatDate(dateStr: string) {
@@ -73,7 +73,7 @@ export default function PersonalRecords({ workouts }: Props) {
             <p className="text-xs text-muted-foreground">{formatDate(pr.date)}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-sm font-bold font-mono">{pr.weight} lbs</p>
+            <p className="text-sm font-bold font-mono">{pr.weight > 0 ? `${pr.weight} lbs` : "Bodyweight"}</p>
             <p className="text-xs text-muted-foreground font-mono">{pr.sets}×{pr.reps}</p>
           </div>
         </div>

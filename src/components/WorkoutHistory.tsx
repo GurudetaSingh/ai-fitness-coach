@@ -104,9 +104,9 @@ export default function WorkoutHistory({ workouts, onUpdate, onDelete }: Props) 
                   </span>
                 </div>
                 <div className="flex gap-3 mt-1 text-xs text-muted-foreground font-mono">
-                  <span>{w.weight} lbs</span>
+                  {w.weight > 0 && <span>{w.weight} lbs</span>}
                   <span>{w.sets}×{w.reps}</span>
-                  <span className="text-primary/70">{w.weight * w.reps * w.sets} vol</span>
+                  {w.weight > 0 && <span className="text-primary/70">{w.weight * w.reps * w.sets} vol</span>}
                 </div>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
