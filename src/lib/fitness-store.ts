@@ -1,3 +1,5 @@
+import { supabase } from "./supabase";
+
 export interface WorkoutEntry {
   id: string;
   date: string;
@@ -13,75 +15,89 @@ export interface BodyWeight {
   weight: number;
 }
 
-const WORKOUTS_KEY = "fitness-workouts";
-const BODYWEIGHT_KEY = "fitness-bodyweight";
-
-export function getWorkouts(): WorkoutEntry[] {
-  const raw = localStorage.getItem(WORKOUTS_KEY);
-  return raw ? JSON.parse(raw) : [];
+async function getUserId(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Not authenticated");
+  return session.user.id;
 }
 
-export function addWorkout(entry: Omit<WorkoutEntry, "id">): WorkoutEntry | null {
-  const workouts = getWorkouts();
-  const isDuplicate = workouts.some(
-    (w) =>
-      w.date === entry.date &&
-      w.exercise === entry.exercise &&
-      w.weight === entry.weight &&
-      w.reps === entry.reps &&
-      w.sets === entry.sets
-  );
-  if (isDuplicate) return null;
-  const newEntry = { ...entry, id: crypto.randomUUID() };
-  workouts.push(newEntry);
-  localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
-  return newEntry;
+// --- Workouts ---
+
+export async function getWorkouts(): Promise<WorkoutEntry[]> {
+  const { data, error } = await supabase
+    .from("workout_entries")
+    .select("id, date, exercise, weight, reps, sets")
+    .order("date", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
 }
 
-export function updateWorkout(id: string, updates: Omit<WorkoutEntry, "id">): WorkoutEntry {
-  const workouts = getWorkouts();
-  const idx = workouts.findIndex((w) => w.id === id);
-  workouts[idx] = { id, ...updates };
-  localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
-  return workouts[idx];
+export async function addWorkout(entry: Omit<WorkoutEntry, "id">): Promise<WorkoutEntry | null> {
+  const user_id = await getUserId();
+  const { data, error } = await supabase
+    .from("workout_entries")
+    .insert({ ...entry, user_id })
+    .select("id, date, exercise, weight, reps, sets")
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export function deleteWorkout(id: string) {
-  const workouts = getWorkouts().filter((w) => w.id !== id);
-  localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
+export async function updateWorkout(id: string, updates: Omit<WorkoutEntry, "id">): Promise<WorkoutEntry> {
+  const { data, error } = await supabase
+    .from("workout_entries")
+    .update(updates)
+    .eq("id", id)
+    .select("id, date, exercise, weight, reps, sets")
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export function getBodyWeights(): BodyWeight[] {
-  const raw = localStorage.getItem(BODYWEIGHT_KEY);
-  return raw ? JSON.parse(raw) : [];
+export async function deleteWorkout(id: string): Promise<void> {
+  const { error } = await supabase.from("workout_entries").delete().eq("id", id);
+  if (error) throw error;
 }
 
-export function addBodyWeight(entry: Omit<BodyWeight, "id">): BodyWeight {
-  const weights = getBodyWeights();
-  const existing = weights.find((w) => w.date === entry.date);
-  if (existing) {
-    existing.weight = entry.weight;
-    localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
-    return existing;
-  }
-  const newEntry = { ...entry, id: crypto.randomUUID() };
-  weights.push(newEntry);
-  localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
-  return newEntry;
+// --- Body weights ---
+
+export async function getBodyWeights(): Promise<BodyWeight[]> {
+  const { data, error } = await supabase
+    .from("body_weights")
+    .select("id, date, weight")
+    .order("date", { ascending: true });
+  if (error) throw error;
+  return data ?? [];
 }
 
-export function updateBodyWeight(id: string, weight: number): BodyWeight {
-  const weights = getBodyWeights();
-  const entry = weights.find((w) => w.id === id)!;
-  entry.weight = weight;
-  localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
-  return entry;
+export async function addBodyWeight(entry: Omit<BodyWeight, "id">): Promise<BodyWeight> {
+  const user_id = await getUserId();
+  const { data, error } = await supabase
+    .from("body_weights")
+    .upsert({ ...entry, user_id }, { onConflict: "user_id,date" })
+    .select("id, date, weight")
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export function deleteBodyWeight(id: string) {
-  const weights = getBodyWeights().filter((w) => w.id !== id);
-  localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
+export async function updateBodyWeight(id: string, weight: number): Promise<BodyWeight> {
+  const { data, error } = await supabase
+    .from("body_weights")
+    .update({ weight })
+    .eq("id", id)
+    .select("id, date, weight")
+    .single();
+  if (error) throw error;
+  return data;
 }
+
+export async function deleteBodyWeight(id: string): Promise<void> {
+  const { error } = await supabase.from("body_weights").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Static data & rule-based insights (unchanged) ---
 
 export const COMMON_EXERCISES = [
   "Bench Press",
@@ -154,7 +170,6 @@ export function generateInsights(workouts: WorkoutEntry[]): string[] {
     }
   });
 
-  // General insights
   const uniqueExercises = new Set(workouts.map((w) => w.exercise));
   if (uniqueExercises.size <= 3) {
     insights.push(
