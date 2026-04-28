@@ -25,7 +25,7 @@ export default function Index() {
   const handleAdd = useCallback(
     (entry: Omit<WorkoutEntry, "id">) => {
       const newEntry = addWorkout(entry);
-      setWorkouts((prev) => [...prev, newEntry]);
+      if (newEntry) setWorkouts((prev) => [...prev, newEntry]);
     },
     []
   );
@@ -36,8 +36,12 @@ export default function Index() {
   }, []);
 
   const handleAddBodyWeight = useCallback((entry: { date: string; weight: number }) => {
-    const newEntry = addBodyWeight(entry);
-    setBodyWeights((prev) => [...prev, newEntry]);
+    const result = addBodyWeight(entry);
+    setBodyWeights((prev) => {
+      const existing = prev.find((w) => w.id === result.id);
+      if (existing) return prev.map((w) => w.id === result.id ? result : w);
+      return [...prev, result];
+    });
   }, []);
 
   const handleDeleteBodyWeight = useCallback((id: string) => {

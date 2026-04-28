@@ -21,8 +21,17 @@ export function getWorkouts(): WorkoutEntry[] {
   return raw ? JSON.parse(raw) : [];
 }
 
-export function addWorkout(entry: Omit<WorkoutEntry, "id">): WorkoutEntry {
+export function addWorkout(entry: Omit<WorkoutEntry, "id">): WorkoutEntry | null {
   const workouts = getWorkouts();
+  const isDuplicate = workouts.some(
+    (w) =>
+      w.date === entry.date &&
+      w.exercise === entry.exercise &&
+      w.weight === entry.weight &&
+      w.reps === entry.reps &&
+      w.sets === entry.sets
+  );
+  if (isDuplicate) return null;
   const newEntry = { ...entry, id: crypto.randomUUID() };
   workouts.push(newEntry);
   localStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
@@ -41,6 +50,12 @@ export function getBodyWeights(): BodyWeight[] {
 
 export function addBodyWeight(entry: Omit<BodyWeight, "id">): BodyWeight {
   const weights = getBodyWeights();
+  const existing = weights.find((w) => w.date === entry.date);
+  if (existing) {
+    existing.weight = entry.weight;
+    localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
+    return existing;
+  }
   const newEntry = { ...entry, id: crypto.randomUUID() };
   weights.push(newEntry);
   localStorage.setItem(BODYWEIGHT_KEY, JSON.stringify(weights));
