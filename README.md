@@ -1,83 +1,112 @@
-# 🏋️ IronMind — AI Fitness Tracker & Coach
+# IronMind — AI Fitness Coach
 
-IronMind is a modern fitness tracking web app that enables users to log workouts, visualize progress, and receive **real-time AI-powered coaching insights** based on their training data.
+A full-stack fitness tracking app with AI-powered coaching, persistent cloud storage, and multi-user auth.
 
-👉 Live Demo: https://ironmindai.netlify.app
-
----
-
-## 🚀 Features
-
-### 📝 Workout Tracking
-- Log exercises with weight, reps, sets, and date  
-- Choose from 16 common exercises (bench press, squat, deadlift, etc.)  
-- View and manage workout history  
-- Persistent storage using browser `localStorage`
-
-### 📊 Progress Visualization
-- Interactive charts showing **weight and volume trends over time**  
-- Stats dashboard:
-  - Total volume  
-  - Max weight  
-  - Active training days  
-
-### 🤖 AI Coaching (Gemini-powered)
-- Workout data is sent to a backend server for analysis  
-- Integrates with Google Gemini (2.5 Flash) to generate **3–5 personalized insights**, including:
-  - Plateau detection  
-  - Recovery and fatigue analysis  
-  - Programming recommendations (deloads, variation, intensity)  
-- Fallback to rule-based insights if AI service is unavailable  
-
-### 💬 Chat with Your Coach
-- Ask questions like:
-  - *“Should I deload?”*
-  - *“How do I improve my bench?”*  
-- AI responses are **context-aware**, using your full workout history  
+Live: https://ironmindai.netlify.app
 
 ---
 
-## 🛠️ Tech Stack
+## Features
+
+### Workout Tracking
+
+- Log exercises with weight, sets, reps, and date
+- Supports bodyweight exercises (pull-ups, dips, etc.)
+- Edit and delete entries inline
+- Duplicate prevention per session
+
+### Body Weight Tracking
+
+- Log daily weigh-ins with inline edit/delete
+- Trends visible in progress charts and AI context
+
+### Progress Visualization
+
+- Interactive charts showing weight and volume trends per exercise
+- Stats bar: total volume, max weight, active training days
+
+### Personal Records
+
+- Tracks all-time PR per exercise
+- Estimated 1RM using the Epley formula
+- Highlights PRs set in the last 7 days
+
+### AI Coaching (Gemini 2.5 Flash)
+
+- Generates 3–5 personalized insights from workout and body weight history
+- Conversational chat with full context awareness
+- Fallback to rule-based insights if AI is unavailable
+
+### Auth & Data
+
+- Email/password sign-up via Supabase Auth
+- Postgres database with Row Level Security (users only access their own data)
+- Guest/demo mode — loads on first visit with pre-seeded realistic data, no sign-up required
+
+---
+
+## Tech Stack
+
+**Frontend** — React 18, TypeScript, Vite, Tailwind CSS, Recharts, Radix UI, Supabase JS client
+
+**Backend** — Node.js, Express, Google Gemini API, rate limiting, shared-secret API auth
+
+**Database** — Supabase (Postgres + Auth + RLS)
+
+---
+
+## Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- Supabase project with `workout_entries` and `body_weights` tables
+- Google Gemini API key
 
 ### Frontend
-- React 18 + TypeScript  
-- Vite  
-- Tailwind CSS  
-- Recharts  
-- Radix UI  
+
+```bash
+npm install
+# create .env.local with VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL, VITE_API_SECRET
+npm run dev
+```
 
 ### Backend
-- Node.js + Express  
-- Google Gemini API  
-- REST API with CORS + proxy handling  
 
-### Data Layer
-- localStorage (client-side persistence)
+```bash
+cd server
+npm install
+# create .env with GEMINI_API_KEY, API_SECRET, ALLOWED_ORIGIN, PORT
+npm run dev
+```
 
----
+### Database schema
 
-## ⚙️ Architecture
+```sql
+create table workout_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  date text not null,
+  exercise text not null,
+  weight numeric not null default 0,
+  reps integer not null,
+  sets integer not null
+);
 
-- Frontend handles UI, state, and chart rendering  
-- Backend securely manages API calls and AI requests  
-- AI model analyzes workout history and returns coaching insights  
+create table body_weights (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  date text not null,
+  weight numeric not null,
+  unique (user_id, date)
+);
 
----
+alter table workout_entries enable row level security;
+alter table body_weights enable row level security;
 
-## 🧠 How It Works
+create policy "users own their workouts" on workout_entries
+  for all using (auth.uid() = user_id);
 
-- Workout data is stored locally and managed via React state  
-- When workouts are logged, data is sent to the backend for analysis  
-- The backend formats structured prompts and sends them to Gemini  
-- AI returns actionable coaching insights based on user history  
-- If the AI service is unavailable, a rule-based engine provides fallback recommendations  
-
----
-
-## 🔮 Future Improvements
-
-- User authentication + cloud data sync  
-- Advanced AI coaching (periodization, long-term planning)  
-- Workout planning & scheduling  
-- Nutrition tracking & calorie integration  
-- Mobile app (React Native)
+create policy "users own their body weights" on body_weights
+  for all using (auth.uid() = user_id);
+```
